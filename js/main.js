@@ -179,7 +179,7 @@
   }
 
   /* ---------- venues: rows rise + floating poster ---------- */
-  gsap.from('.venue__name', { yPercent: 100, opacity: 0, stagger: .07, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.venues__list', start: 'top 82%' } });
+  if (!touch) gsap.from('.venue__name', { yPercent: 100, opacity: 0, stagger: .07, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.venues__list', start: 'top 82%' } });
   if (!touch) {
     const float = $('.venue-float'), fImg = $('img', float);
     const xTo = gsap.quickTo(float, 'x', { duration: .6, ease: 'power3' });
