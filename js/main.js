@@ -220,16 +220,25 @@
     const xTo = gsap.quickTo(float, 'x', { duration: .6, ease: 'power3' });
     const yTo = gsap.quickTo(float, 'y', { duration: .6, ease: 'power3' });
     const rTo = gsap.quickTo(float, 'rotation', { duration: .8, ease: 'power3' });
-    let lastX = 0;
+    let lastX = 0, px = -1, py = -1, shown = false;
+    const hideFloat = () => { if (!shown) return; shown = false; gsap.to(float, { opacity: 0, scale: .6, duration: .3, ease: 'power3.in', overwrite: 'auto' }); fVid.pause(); };
+    // hide whenever the pointer is no longer over a venue row: covers scrolling away
+    // (no mouseleave fires when the page moves under a still mouse) and leaving the window
+    const checkUnder = () => { if (!shown || px < 0) return; const el = document.elementFromPoint(px, py); if (!el || !el.closest('.venue')) hideFloat(); };
     window.addEventListener('mousemove', e => {
-      xTo(e.clientX - float.offsetWidth / 2); yTo(e.clientY - float.offsetHeight / 2);
-      rTo(gsap.utils.clamp(-12, 12, (e.clientX - lastX) * .6)); lastX = e.clientX;
+      px = e.clientX; py = e.clientY;
+      xTo(px - float.offsetWidth / 2); yTo(py - float.offsetHeight / 2);
+      rTo(gsap.utils.clamp(-12, 12, (px - lastX) * .6)); lastX = px;
+      checkUnder();
     });
+    window.addEventListener('scroll', checkUnder, { passive: true });
+    document.documentElement.addEventListener('mouseleave', hideFloat);
+    ScrollTrigger.create({ trigger: '.venues', start: 'top bottom', end: 'bottom top', onLeave: hideFloat, onLeaveBack: hideFloat });
     $$('.venue').forEach(v => {
-      v.addEventListener('mouseenter', () => { showVenue(v); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
-      v.addEventListener('mouseleave', () => { gsap.to(float, { opacity: 0, scale: .6, duration: .4, ease: 'power3.in' }); fVid.pause(); });
-      v.addEventListener('focus', () => { const b = v.getBoundingClientRect(); showVenue(v); xTo(b.right - float.offsetWidth - 40); yTo(b.top - float.offsetHeight / 2); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
-      v.addEventListener('blur', () => gsap.to(float, { opacity: 0, scale: .6, duration: .4 }));
+      v.addEventListener('mouseenter', () => { shown = true; showVenue(v); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out', overwrite: 'auto' }); });
+      v.addEventListener('mouseleave', () => { shown = true; hideFloat(); });
+      v.addEventListener('focus', () => { const b = v.getBoundingClientRect(); shown = true; showVenue(v); xTo(b.right - float.offsetWidth - 40); yTo(b.top - float.offsetHeight / 2); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out', overwrite: 'auto' }); });
+      v.addEventListener('blur', () => { shown = true; hideFloat(); });
     });
   }
 
