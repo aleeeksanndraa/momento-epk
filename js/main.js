@@ -35,6 +35,26 @@
     });
   });
 
+  /* ---------- collage tiles rotate through their pool of clips ---------- */
+  $$('video[data-pool]').forEach(v => {
+    const pool = v.dataset.pool.split('|'); let k = 0;
+    v.loop = false;
+    v.addEventListener('ended', () => {
+      k = (k + 1) % pool.length;
+      v.poster = pool[k] + '.jpg'; v.src = pool[k] + '.mp4';
+      v.play().catch(() => {});
+    });
+  });
+
+  /* ---------- reel clips: play only the ones on screen ---------- */
+  if ('IntersectionObserver' in window) {
+    const rio = new IntersectionObserver(es => es.forEach(en => {
+      const v = en.target;
+      if (en.isIntersecting) { if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}); } else v.pause();
+    }), { rootMargin: '0px 200px' });
+    $$('.reel video').forEach(v => rio.observe(v));
+  }
+
   /* ---------- videos only play while on screen (keeps the page light) ---------- */
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(entries => entries.forEach(en => {
@@ -71,19 +91,26 @@
   }
 
   /* ---------- venues: keyboard focus shows the poster too ---------- */
-  $$('.venue').forEach(v => { v.setAttribute('tabindex', '0'); v.setAttribute('role', 'button'); });
+  $$('.venue').forEach(v => {
+    v.setAttribute('tabindex', '0'); v.setAttribute('role', 'button');
+    if (v.dataset.video) $('.venue__meta', v).insertAdjacentHTML('beforeend', '<span class="venue__live">Video</span>');
+  });
 
   /* ---------- touch: venue thumbnails inline ---------- */
   if (touch) {
     $$('.venue').forEach(v => {
       const t = document.createElement('span');
       t.className = 'venue__thumb';
-      t.innerHTML = `<img src="${v.dataset.img}" alt="" loading="lazy">`;
+      t.innerHTML = v.dataset.video
+        ? `<video src="${v.dataset.video}" muted loop playsinline preload="none"></video>`
+        : `<img src="${v.dataset.img}" alt="" loading="lazy">`;
       v.appendChild(t);
       v.addEventListener('click', () => {
         const open = !v.classList.contains('is-open');
         $$('.venue').forEach(o => o.classList.remove('is-open'));
         v.classList.toggle('is-open', open);
+        $$('.venue__thumb video').forEach(x => x.pause());
+        const tv = $('.venue__thumb video', v); if (open && tv) tv.play().catch(() => {});
       });
     });
   }
@@ -185,7 +212,11 @@
   /* ---------- venues: rows rise + floating poster ---------- */
   if (!touch) gsap.from('.venue__name', { yPercent: 100, opacity: 0, stagger: .07, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.venues__list', start: 'top 82%' } });
   if (!touch) {
-    const float = $('.venue-float'), fImg = $('img', float);
+    const float = $('.venue-float'), fImg = $('img', float), fVid = $('video', float);
+    const showVenue = v => {
+      if (v.dataset.video) { float.classList.add('has-video'); if (fVid.getAttribute('src') !== v.dataset.video) fVid.src = v.dataset.video; fVid.play().catch(() => {}); }
+      else { float.classList.remove('has-video'); fVid.pause(); fImg.src = v.dataset.img; }
+    };
     const xTo = gsap.quickTo(float, 'x', { duration: .6, ease: 'power3' });
     const yTo = gsap.quickTo(float, 'y', { duration: .6, ease: 'power3' });
     const rTo = gsap.quickTo(float, 'rotation', { duration: .8, ease: 'power3' });
@@ -195,9 +226,9 @@
       rTo(gsap.utils.clamp(-12, 12, (e.clientX - lastX) * .6)); lastX = e.clientX;
     });
     $$('.venue').forEach(v => {
-      v.addEventListener('mouseenter', () => { fImg.src = v.dataset.img; gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
-      v.addEventListener('mouseleave', () => gsap.to(float, { opacity: 0, scale: .6, duration: .4, ease: 'power3.in' }));
-      v.addEventListener('focus', () => { const b = v.getBoundingClientRect(); fImg.src = v.dataset.img; xTo(b.right - float.offsetWidth - 40); yTo(b.top - float.offsetHeight / 2); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
+      v.addEventListener('mouseenter', () => { showVenue(v); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
+      v.addEventListener('mouseleave', () => { gsap.to(float, { opacity: 0, scale: .6, duration: .4, ease: 'power3.in' }); fVid.pause(); });
+      v.addEventListener('focus', () => { const b = v.getBoundingClientRect(); showVenue(v); xTo(b.right - float.offsetWidth - 40); yTo(b.top - float.offsetHeight / 2); gsap.to(float, { opacity: 1, scale: 1, duration: .5, ease: 'expo.out' }); });
       v.addEventListener('blur', () => gsap.to(float, { opacity: 0, scale: .6, duration: .4 }));
     });
   }

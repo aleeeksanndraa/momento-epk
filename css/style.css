@@ -440,3 +440,24 @@ button:focus-visible, a:focus-visible { outline: 1px dashed currentColor; outlin
 @media (hover: none) { .collage:hover .tile, .collage .tile:hover { filter: none; } }
 .hero__kicker span, .hero__sub { text-shadow: 0 1px 12px rgba(0,0,0,.65); }
 @supports not (overflow: clip) { .page { overflow: hidden; } }
+
+/* ============ REEL (moving strips of clips) ============ */
+.reel { padding: clamp(56px, 8vw, 110px) 0; overflow: hidden; }
+.reel .section-head { padding: 0 var(--gutter); }
+.reel__row { display: flex; width: max-content; gap: clamp(8px, 1vw, 14px); margin-bottom: clamp(8px, 1vw, 14px); animation: reel 60s linear infinite; }
+.reel__row--rev { animation-direction: reverse; animation-duration: 70s; }
+.reel:hover .reel__row { animation-play-state: paused; }
+.reel__track { display: flex; gap: clamp(8px, 1vw, 14px); list-style: none; margin: 0; padding: 0; }
+.reel__item { width: clamp(200px, 22vw, 340px); aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--ink-2); flex: 0 0 auto; transition: transform .5s var(--ease), filter .5s; }
+.reel__item video { width: 100%; height: 100%; object-fit: cover; }
+@media (hover: hover) { .reel:hover .reel__item { filter: brightness(.55); } .reel .reel__item:hover { filter: none; transform: scale(1.06); } }
+@keyframes reel { to { transform: translateX(-50%); } }
+
+/* ============ VENUE FLOAT: poster or clip ============ */
+.venue-float video { display: none; width: 100%; height: 100%; object-fit: cover; }
+.venue-float.has-video { aspect-ratio: 4 / 5; }
+.venue-float.has-video img { display: none; }
+.venue-float.has-video video { display: block; }
+.venue__thumb video { width: 100%; aspect-ratio: 16/10; object-fit: cover; margin-top: 14px; border-radius: 12px; display: block; }
+.venue__live { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--white); }
+.venue__live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ff3b30; animation: pulse 1.4s ease-in-out infinite; }
