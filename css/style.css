@@ -427,3 +427,8 @@ button:focus-visible, a:focus-visible { outline: 1px dashed currentColor; outlin
   .cards3 { scroll-padding-inline: var(--gutter); padding-bottom: 4px; }
   .rail { scroll-padding-inline: var(--gutter); }
 }
+
+/* T&C Magazine logo (white on black art) */
+.ccard--type { background: #000; }
+.ccard__logo { width: 72%; max-width: 320px; height: auto; mix-blend-mode: screen; transition: transform 1s var(--ease); }
+.ccard--type:hover .ccard__logo { transform: scale(1.05); }
