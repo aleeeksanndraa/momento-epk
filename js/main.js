@@ -29,7 +29,10 @@
   $$('.tile').forEach(t => {
     t.addEventListener('mouseenter', () => { activeTile = t; applySound(); });
     t.addEventListener('mouseleave', () => { activeTile = null; applySound(); });
-    t.addEventListener('click', () => { activeTile = t; setSound(true); });
+    t.addEventListener('click', () => {
+      if (activeTile === t && soundOn) { setSound(false); return; }
+      activeTile = t; setSound(true);
+    });
   });
 
   /* ---------- videos only play while on screen (keeps the page light) ---------- */
@@ -40,6 +43,7 @@
         if (v.hasAttribute('data-hoverplay') && !touch) return; // service cards play on hover (desktop)
         en.isIntersecting ? v.play().catch(() => {}) : v.pause();
       });
+      if (!en.isIntersecting && en.target.classList.contains('collage') && activeTile) { activeTile = null; applySound(); }
     }), { threshold: 0.05 });
     $$('.pill video, .partner__bg, .hero__video').forEach(v => io.observe(v));
     io.observe($('.collage'));
@@ -212,7 +216,10 @@
     const cur = $('.cursor'), lab = $('.cursor__label', cur);
     const cx = gsap.quickTo(cur, 'x', { duration: .25, ease: 'power3' });
     const cy = gsap.quickTo(cur, 'y', { duration: .25, ease: 'power3' });
-    window.addEventListener('mousemove', e => { cx(e.clientX); cy(e.clientY); });
+    window.addEventListener('mousemove', e => { cx(e.clientX); cy(e.clientY); cur.classList.add('is-on'); });
+    document.documentElement.addEventListener('mouseleave', () => cur.classList.remove('is-on'));
+    $('.nav').addEventListener('mouseenter', () => cur.classList.remove('is-label'));
+    $('.nav').addEventListener('mouseleave', () => { lab.textContent = 'Sound'; cur.classList.add('is-label'); });
     $$('[data-cursor]').forEach(el => {
       el.addEventListener('mouseenter', () => { lab.textContent = el.dataset.cursor; cur.classList.add('is-label'); });
       el.addEventListener('mouseleave', () => cur.classList.remove('is-label'));
